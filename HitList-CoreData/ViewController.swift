@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import CoreData
 
 
 class ViewController: UIViewController,UITableViewDataSource {
@@ -17,7 +17,7 @@ class ViewController: UIViewController,UITableViewDataSource {
     
     @IBOutlet weak var tableView: UITableView!
     
-    var names:[String] = []
+    var people:[NSManagedObject] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,14 +29,17 @@ class ViewController: UIViewController,UITableViewDataSource {
     
     @IBAction func addNames(_ sender: Any) {
         let alert = UIAlertController(title: "New Name", message: "Add a New Name", preferredStyle: .alert)
+        
         let saveAction = UIAlertAction(title: "Save", style: .default) { (action) in
            guard let textField = alert.textFields?.first,
             let nameToSave = textField.text else{
             return
-        }
-            self.names.append(nameToSave)
+         }
+            self.save(name: nameToSave)
             self.tableView.reloadData()
+           
      }
+    
       
         let cancelAction = UIAlertAction(title: "Cancel",
                                          style: .cancel)
@@ -47,19 +50,45 @@ class ViewController: UIViewController,UITableViewDataSource {
         alert.addAction(cancelAction)
         
         present(alert, animated: true)
+        
+        
+    }
+    func  save(name:String) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+            return
+        }
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let entity = NSEntityDescription.entity(forEntityName: "Person", in: managedContext)
+        let person = NSManagedObject(entity:entity!, insertInto: managedContext)
+        person.setValue(name, forKey: "name")
+        
+        do{
+            try managedContext.save()
+            people.append(person)
+        }
+        catch let error as NSError {
+             print("Could not save. \(error), \(error.userInfo)")
+        }
     }
     
+    
+    
+    
+   
+   
    
     
    
     
      func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int{
-        return names.count
+        return people.count
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell{
+        let person = people[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        cell.textLabel?.text = names[indexPath.row]
+        cell.textLabel?.text = person.value(forKeyPath:"Name") as? String
         return cell
     }
 
@@ -68,6 +97,7 @@ class ViewController: UIViewController,UITableViewDataSource {
     
     
     override func didReceiveMemoryWarning() {
+        
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
