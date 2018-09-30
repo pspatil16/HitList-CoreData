@@ -19,6 +19,28 @@ class ViewController: UIViewController,UITableViewDataSource {
     
     var people:[NSManagedObject] = []
     
+    override func viewWillAppear(_ animated: Bool) {
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else{
+         return
+        }
+        
+        let managedContext = appDelegate.persistentContainer.viewContext
+        
+        let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Person")
+        
+        do{
+            people = try managedContext.fetch(fetchRequest)
+        }
+        catch let erroe as NSError {
+            print("Could not fetch. \(erroe),\(erroe.userInfo)")
+        }
+        
+    }
+    
+   
+    
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The List"
